@@ -8,6 +8,9 @@ const uri = process.env.MONGO_DB_URI;
 const app = express();
 const PORT = process.env.PORT;
 
+app.use(cors());
+app.use(express.json());
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -214,9 +217,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-app.use(cors());
-app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Server is cooking!");
