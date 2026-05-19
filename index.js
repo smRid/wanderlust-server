@@ -1,16 +1,11 @@
 const express = require("express");
-const dontenv = require("dotenv");
 const cors = require("cors");
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-dontenv.config();
 
-const uri = process.env.MONGODB_URI;
-
+const uri = process.env.MONGO_DB_URI;
 const app = express();
 const PORT = process.env.PORT;
-
-app.use(cors());
-app.use(express.json());
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -24,53 +19,63 @@ async function run() {
   try {
     await client.connect();
 
-    const db = client.db("wanderlust");
-    const destinationCollection = db.collection("destinations");
+    const database = client.db("wanderlast");
+    const destinationsCollection = database.collection("destinations");
 
-    app.get("/destination", async (req, res) => {
-      const result = await destinationCollection.find().toArray();
-      res.json(result);
-    });
-
-    app.post("/destination", async (req, res) => {
-      const destinationData = req.body;
-      console.log(destinationData);
-      const result = await destinationCollection.insertOne(destinationData);
-
-      res.json(result);
-    });
-
-    app.get("/destination/:id", async (req, res) => {
-      const { id } = req.params;
-
-      const result = await destinationCollection.findOne({
-        _id: new ObjectId(id),
+    // Create a new destination
+    app.post("/destinations", async (req, res) => {
+      const destination = req.body;
+      const result = await destinationsCollection.insertOne(destination);
+      res.json({
+        success: true,
+        message: "Destination added successfully",
+        id: result.insertedId,
       });
-
-      res.json(result);
     });
 
-    app.patch("/destination/:id", async (req, res) => {
-      const { id } = req.params;
+    // Get all destinations
+    app.get("/destinations", async (req, res) => {
+      const destinations = await destinationsCollection.find().toArray();
+      res.json(destinations);
+    });
+
+    // Get a destination by ID
+    app.get("/destinations/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const destination = await destinationsCollection.findOne(query);
+      res.json(destination);
+    });
+
+    // Update a destination by ID
+    app.patch("/destinations/:id", async (req, res) => {
+      const id = req.params.id;
       const updatedData = req.body;
-      console.log(updatedData);
-
-      const result = await destinationCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedData },
-      );
-
-      res.json(result);
-    });
-
-    app.delete("/destination/:id", async (req, res) => {
-      const { id } = req.params;
-      const result = await destinationCollection.deleteOne({
-        _id: new ObjectId(id),
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: updatedData,
+      };
+      const result = await destinationsCollection.updateOne(query, updateDoc);
+      res.json({
+        success: true,
+        message: "Destination updated successfully",
+        modifiedCount: result.modifiedCount,
       });
-      res.json(result);
     });
 
+    // Delete a destination by ID
+    app.delete("/destinations/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await destinationsCollection.deleteOne(query);
+      res.json({
+        success: true,
+        message: "Destination deleted successfully",
+        deletedCount: result.deletedCount,
+      });
+    });
+
+    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
@@ -82,10 +87,13 @@ async function run() {
 }
 run().catch(console.dir);
 
+app.use(cors());
+app.use(express.json());
+
 app.get("/", (req, res) => {
-  res.send("Server is running fine!");
+  res.send("Server is running!");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
