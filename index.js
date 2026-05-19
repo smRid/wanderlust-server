@@ -21,6 +21,7 @@ async function run() {
 
     const database = client.db("wanderlast");
     const destinationsCollection = database.collection("destinations");
+    const bookingsCollection = database.collection("bookings");
 
     // Create a new destination
     app.post("/destinations", async (req, res) => {
@@ -71,6 +72,36 @@ async function run() {
       res.json({
         success: true,
         message: "Destination deleted successfully",
+        deletedCount: result.deletedCount,
+      });
+    });
+
+    // Create a new booking
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+      const result = await bookingsCollection.insertOne(booking);
+      res.json({
+        success: true,
+        message: "Booking added successfully",
+        id: result.insertedId,
+      });
+    });
+
+    // Get bookings by user ID
+    app.get("/bookings/:userId", async (req, res) => {
+      const userId = req.params.userId;
+      const result = await bookingsCollection.find({ userId }).toArray();
+      res.json(result);
+    });
+
+    // Delete a booking by ID
+    app.delete("/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookingsCollection.deleteOne(query);
+      res.json({
+        success: true,
+        message: "Booking deleted successfully",
         deletedCount: result.deletedCount,
       });
     });
