@@ -6,7 +6,19 @@ const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 
 const uri = process.env.MONGO_DB_URI;
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
+
+if (!uri) {
+  console.error("Missing required environment variable: MONGO_DB_URI");
+  console.error("Create a .env file from .env.example and add your MongoDB URI.");
+  process.exit(1);
+}
+
+if (!process.env.CLIENT_URL) {
+  console.error("Missing required environment variable: CLIENT_URL");
+  console.error("Create a .env file from .env.example and add your client URL.");
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());
@@ -215,9 +227,9 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Server is cooking!");
+  res.send("Server is running!");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is cooking on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

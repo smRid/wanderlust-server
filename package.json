@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "server": "nodemon index.js"
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "server": "node --watch index.js"
   },
   "keywords": [],
   "author": "",
